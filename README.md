@@ -64,3 +64,7 @@ Run application and compare test directory content
 php helm-values-injector.php test
 git diff
 ```
+
+## Todo
+
+Rewrite in golang to provide single binary =)
