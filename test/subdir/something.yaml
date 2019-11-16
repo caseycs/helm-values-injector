@@ -1,0 +1,2 @@
+aaa: %%secret.test1.bla%%
+    bbb: %%secret.test2.bla%%

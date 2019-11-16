@@ -1,0 +1,19 @@
+{
+  "name": "caseycs/helm-vault-injector",
+  "authors": [
+    {
+      "name": "Ilia Kondrashov",
+      "email": "caseycs@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "HelmVaultInjector\\": "src/"
+    }
+  },
+  "require": {
+    "vlucas/phpdotenv": "^3.6",
+    "jippi/vault-php-sdk": "^3.0",
+    "guzzlehttp/guzzle": "~6.0"
+  }
+}
