@@ -26,8 +26,11 @@ class Processor
         /** @var \SplFileObject $file */
         foreach ($fileWalker->walk('/^.+\.yaml/i', 'r+') as $file) {
             $content = $file->fread($file->getSize());
+            $newContent = $this->templateProcessor->process($content);
+
             $file->rewind();
-            $file->fwrite($this->templateProcessor->process($content));
+            $file->fwrite($newContent);
+            $file->ftruncate(strlen($newContent));
         }
     }
 

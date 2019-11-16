@@ -2,3 +2,4 @@
 .idea
 vendor
 secretfile
+config.hcl

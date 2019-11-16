@@ -20,6 +20,7 @@ class TemplateProcessor
         return preg_replace_callback(
             '|%%(.*?)%%|',
             function (array $matches): string {
+                var_dump($matches);
                 return $this->replaceCallback($matches[1]);
             },
             $content

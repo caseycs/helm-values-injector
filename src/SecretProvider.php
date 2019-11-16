@@ -6,6 +6,8 @@ namespace HelmVaultInjector;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use HelmVaultInjector\Exception\Exception;
+use HelmVaultInjector\Exception\KeypathInvalid;
+use HelmVaultInjector\Exception\SecretNotFound;
 
 class SecretProvider
 {
@@ -32,23 +34,25 @@ class SecretProvider
     public function get(string $key): string
     {
         if (!$key) {
-            throw new Exception('Empty secret kaypath');
+            throw new Exception('Kaypath empty');
         }
         $keyParts = explode('.', $key);
         if (!$keyParts || count($keyParts) < 3 || count($keyParts) > 3) {
-            throw new Exception('Keypath does not have 3 parts: ' . $key);
+            throw new KeypathInvalid(sprintf('Keypath %s does not have 3 parts: ', $key));
         }
+
         list ($path, $secret, $key) = $keyParts;
+        $fullPath = $path . '/data/' . $secret;
 
         try {
             $response = $this->client->request('GET', 'v1/' . $path . '/data/' . $secret);
         } catch (GuzzleException $e) {
-            throw new Exception('Keypath fetch failed: ' . $key, 0, $e);
+            throw new SecretNotFound(sprintf('Secret %s fetch failed: ', $fullPath), 0, $e);
         }
 
         $responseData = json_decode($response->getBody()->getContents(), true);
         if (!isset($responseData['data']['data'][$key])) {
-            throw new Exception(sprintf('Key %s is missing in secret %s', $key, $secret));
+            throw new SecretNotFound(sprintf('Key %s is missing in secret %s', $key, $secret));
         }
 
         return $responseData['data']['data'][$key];
