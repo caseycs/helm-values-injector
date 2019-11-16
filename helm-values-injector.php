@@ -1,3 +1,4 @@
+#!/usr/local/bin/php
 <?php
 declare(strict_types=1);
 
