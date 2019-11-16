@@ -4,3 +4,4 @@ vendor
 secretfile
 anotherSecretfile
 config.hcl
+composer.lock
