@@ -31,10 +31,11 @@ vaultPath.secret.key
 ```
 ## Usage
 
-```shell script
+```
+export VAULT_TOKEN=myroot
+export VAULT_URL=http://docker-machine:8200
 php helm-values-injector.php dir1 [dir2] [file3] [...]
 ```
-
 
 ## Testing
 
@@ -43,7 +44,10 @@ Run vault
 ```shell script
 export VAULT_TOKEN=myroot
 echo "ui = true" > config.hcl
-docker run --rm --cap-add=IPC_LOCK  --name=dev-vault -e "VAULT_DEV_ROOT_TOKEN_ID=$VAULT_TOKEN" -p 8200:8200 vault
+docker run --rm \
+  -e "VAULT_DEV_ROOT_TOKEN_ID=$VAULT_TOKEN" \
+  -p 8200:8200 \
+  vault
 ```
 
 Populate some data
