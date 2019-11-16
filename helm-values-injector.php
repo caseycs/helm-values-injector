@@ -3,38 +3,30 @@ declare(strict_types=1);
 
 require 'vendor/autoload.php';
 
-$dotenv = Dotenv\Dotenv::create(__DIR__);
+(new \NunoMaduro\Collision\Provider)->register();
+
+$dotenv = \Dotenv\Dotenv::create(__DIR__);
 $dotenv->load();
 $dotenv->required(['VAULT_URL', 'VAULT_TOKEN']);
 
 if (empty($argv[1])) {
-    echo 'Directory not provided' . PHP_EOL;
-    exit(1);
+    throw new \HelmVaultInjector\Exception\Exception('Directory not provided');
 }
+$files = array_slice($argv, 1);
 
-if (!is_dir($argv[1])) {
-    echo 'Directory invalid' . PHP_EOL;
-    exit(1);
-}
+$log = new \Monolog\Logger('');
+$log->pushHandler(new \Monolog\Handler\StreamHandler('php://stdout', \Monolog\Logger::DEBUG));
 
-$secretProvider = new HelmVaultInjector\SecretProvider(getenv('VAULT_URL'), getenv('VAULT_TOKEN'));
-$templateProcessor = new HelmVaultInjector\TemplateProcessor($secretProvider);
+$secretProvider = new \HelmVaultInjector\SecretProvider(
+    getenv('VAULT_URL'),
+    getenv('VAULT_TOKEN'),
+    $log
+);
 
-$fileWalker = new \HelmVaultInjector\FileWalker($argv[1]);
-$processor = new \HelmVaultInjector\Processor($secretProvider, $templateProcessor);
+$fileIterator = new \HelmVaultInjector\FileIterator($files);
+$templateProcessor = new \HelmVaultInjector\TemplateProcessor($secretProvider);
+$processor = new \HelmVaultInjector\Processor($secretProvider, $templateProcessor, $log);
 
-try {
-    echo 'Processing .yaml files' . PHP_EOL;
-    $processor->processYaml($fileWalker);
+$processor->process($fileIterator);
 
-    echo 'Processing .vault files' . PHP_EOL;
-    $processor->processDotVault($fileWalker);
-} catch (HelmVaultInjector\Exception\SecretNotFound $e) {
-    echo $e->getMessage();
-    exit(1);
-} catch (HelmVaultInjector\Exception\SecretKeyMissing $e) {
-    echo $e->getMessage();
-    exit(1);
-}
-
-echo 'Done!' . PHP_EOL;
+$log->info('Done');

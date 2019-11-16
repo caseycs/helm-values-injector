@@ -8,6 +8,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use HelmVaultInjector\Exception\Exception;
 use HelmVaultInjector\Exception\KeypathInvalid;
 use HelmVaultInjector\Exception\SecretNotFound;
+use Psr\Log\LoggerInterface;
 
 class SecretProvider
 {
@@ -17,11 +18,15 @@ class SecretProvider
     private $client;
 
     /**
+     * @var LoggerInterface
+     */
+    private $log;
+
+    /**
      * SecretProvider constructor.
      */
-    public function __construct(string $vaultUrl, string $vaultToken)
+    public function __construct(string $vaultUrl, string $vaultToken, LoggerInterface $log)
     {
-        var_dump(func_get_args());
         $this->client = new Client([
             // Base URI is used with relative requests
             'base_uri' => $vaultUrl,
@@ -29,19 +34,20 @@ class SecretProvider
             'timeout' => 2.0,
             'headers' => ['X-Vault-Token' => $vaultToken],
         ]);
+        $this->log = $log;
     }
 
-    public function get(string $key): string
+    public function get(string $keyPath): string
     {
-        if (!$key) {
+        if (!$keyPath) {
             throw new Exception('Kaypath empty');
         }
-        $keyParts = explode('.', $key);
-        if (!$keyParts || count($keyParts) < 3 || count($keyParts) > 3) {
+        $keyPathParts = explode('.', $keyPath);
+        if (!$keyPathParts || count($keyPathParts) < 3 || count($keyPathParts) > 3) {
             throw new KeypathInvalid(sprintf('Keypath %s does not have 3 parts: ', $key));
         }
 
-        list ($path, $secret, $key) = $keyParts;
+        list ($path, $secret, $key) = $keyPathParts;
         $fullPath = $path . '/data/' . $secret;
 
         try {
@@ -54,6 +60,8 @@ class SecretProvider
         if (!isset($responseData['data']['data'][$key])) {
             throw new SecretNotFound(sprintf('Key %s is missing in secret %s', $key, $secret));
         }
+
+        $this->log->info('Secret found: ' . $keyPath);
 
         return $responseData['data']['data'][$key];
     }

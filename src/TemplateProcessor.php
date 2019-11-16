@@ -10,6 +10,9 @@ class TemplateProcessor
      */
     private $secretProvider;
 
+    private const BRACKET_OPEN = '%%';
+    private const BRACKET_CLOSE = '%%';
+
     public function __construct(SecretProvider $secretProvider)
     {
         $this->secretProvider = $secretProvider;
@@ -18,9 +21,11 @@ class TemplateProcessor
     public function process(string $content): string
     {
         return preg_replace_callback(
-            '|%%(.*?)%%|',
+            sprintf('|%s(.*?)%s|',
+                preg_quote(self::BRACKET_OPEN, '|'),
+                preg_quote(self::BRACKET_CLOSE, '|')
+            ),
             function (array $matches): string {
-                var_dump($matches);
                 return $this->replaceCallback($matches[1]);
             },
             $content
